@@ -4,6 +4,8 @@ import { InputText } from "../components/input";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from "zod";
+import { Timestamp, collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
+import { firestore } from "../firebase";
 
 interface Inputs {
   school: string;
@@ -27,11 +29,22 @@ export function PageAddSession() {
       mode: 'onChange', resolver: zodResolver(validationSchema)
   });
 
-  const onSubmit: SubmitHandler<Inputs> = (data) => {
-    const randomId = (Date.now() * Math.random()).toString().slice(0,6);
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    try {
+      const randomId = (Date.now() * Math.random()).toString().slice(0,6);
+  
+      await setDoc(doc(firestore, 'session', doc(collection(firestore, 'session')).id), {
+        ...data,
+          sessionId: randomId,
+        createdAt: Timestamp.now(),
+        active: true
+      })
 
-    navigate(`/counselor/session/${randomId}`)
-  };
+      navigate(`/counselor/session/${randomId}`);
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   return(
     <main className="w-full min-h-screen bg-[url(/assets/background-dark.svg)]  bg-center bg-cover bg-no-repeat">

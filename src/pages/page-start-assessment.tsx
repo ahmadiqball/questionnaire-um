@@ -4,6 +4,10 @@ import { InputRadio, InputText } from "../components/input";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from '@hookform/resolvers/zod';
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { firestore } from "../firebase";
+import { useState } from "react";
+import { useStore } from "../store";
 
 interface Inputs {
   name: string;
@@ -22,6 +26,8 @@ const validationSchema = z.object({
 })
 
 export function PageStartAssessment() {
+  const [error, setError] = useState(false);
+  const { setUserData } = useStore();
   const navigate = useNavigate();
   const { 
     register, 
@@ -32,10 +38,26 @@ export function PageStartAssessment() {
   });
 
     
-  const onSubmit: SubmitHandler<Inputs> = (data) => {
-    console.log("🚀 ~ file: page-start-assessment.tsx:39 ~ PageStartAssessment ~ data:", data)
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    try {
+      const dbData = await getDocs(query(collection(firestore, 'session'), where('sessionId', '==', data.token)))
+      
+      if (dbData.empty) {
+        setError(true);
+        return;
+      }
 
-    navigate(`/assessment/${data.token}`)
+      setUserData({
+        name: data.name,
+        age: data.age,
+        gender: data.gender,
+        school: data.school
+      })
+
+      navigate(`/assessment/${data.token}`)
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   return(
@@ -60,6 +82,35 @@ export function PageStartAssessment() {
 
         </div>
       </div>
+
+      {error ? (
+        <div className="fixed z-50 top-0 left-0 w-full h-full bg-[#0A0A0A] bg-opacity-80 flex justify-center items-center">
+          <div className="bg-white rounded-md w-[85%] lg:w-[626px] overflow-hidden">
+            <div className="px-6 pt-6 pb-4">
+              <h4 className="text-[#0a0a0a] text-4xl font-bold flex items-center">
+                <img src="/assets/warning.svg" className="h-9 mt-1 mr-2 -ml-2"/>
+                Token Salah
+              </h4>
+              <p className="text-[#616161] text-2xl mt-2 ml-9">
+                Token yang anda masukkan salah. Mohon isi kembali dan pastikan yang anda masukkan benar.
+              </p>
+            </div>
+            <div className="flex justify-end bg-[#F5F5F5] py-3 px-6 gap-3">
+              <Button
+                className="w-full" 
+                light 
+                onClick={() => {
+                  setError(false);
+                  navigate('/');
+                }}
+              >
+                Kembali ke Home
+              </Button>
+              <Button className="w-full"  onClick={() => setError(false)}>Masukkan Token</Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   )
 }

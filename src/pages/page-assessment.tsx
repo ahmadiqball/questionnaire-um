@@ -5,25 +5,55 @@ import { Button } from "../components/button";
 import classNames from "classnames";
 import { useStore } from "../store";
 import { useNavigate, useParams } from "react-router-dom";
+import { Timestamp, collection, doc, setDoc } from "firebase/firestore";
+import { firestore } from "../firebase";
 
 interface AnswerState {
   id: number;
-  question: string;
-  value?: number;
+  value: number;
 }
 
 export function PageAssessment() {
   const navigate = useNavigate();
   const { assessmentId } = useParams();
-  const [question, setQuestion] = useState(46);
+  const [question, setQuestion] = useState(1);
   const [answer, setAnswer] = useState(questions);
   const activeQuestion = questions[question as keyof typeof questions];
-  const { setStoreAnswers } = useStore();
+  const { userData, setStoreAnswers } = useStore();
 
-  const changeQuestionHandler = (type: string) => {
+  const sendToDatabase = async () => {
+    try {
+      const arrayValue = Object.values(answer);
+      const savedAnswer = arrayValue.map((item: any) => {
+        return {
+          id: item.id,
+          value: item.value
+        }
+      })
+
+      await setDoc(doc(firestore, 'assessment', doc(collection(firestore, 'assessment')).id), {
+        name: userData!.name,
+        age: userData!.age,
+        school: userData!.school,
+        gender: userData!.gender,
+        answer: JSON.stringify(savedAnswer),
+        sessionId: assessmentId,
+        createdAt: Timestamp.now(),
+      })
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const changeQuestionHandler = async (type: string) => {
     if (type === 'next' && question === 46) {
-      setStoreAnswers(answer);
-      navigate(`/assessment/${assessmentId}/result`)
+      try {
+        await sendToDatabase();
+        setStoreAnswers(answer);
+        navigate(`/assessment/${assessmentId}/result`);
+      } catch (err) {
+        console.error(err);
+      }
     }
 
     if (type === 'next') {
@@ -33,7 +63,7 @@ export function PageAssessment() {
     }
   };
 
-  const updateQuestionValue = (value: string) => {
+  const updateQuestionValue = (value: number) => {
     setAnswer({
       ...answer,
       [question]: {

@@ -13,20 +13,7 @@ export function PageAssessmentResult() {
   const navigate = useNavigate();
   const { storeAnswers } = useStore();
   const arrayAnswer = Object.values(storeAnswers)
-  const total = arrayAnswer.reduce((res, cur) => {
-    if (cur.value) {
-      if (cur.value === 'Sangat Setuju') {
-        return res + 4
-      } else if (cur.value === 'Setuju') {
-        return res + 3
-      } else if (cur.value === 'Tidak Setuju') {
-        return res + 2
-      } else if (cur.value === 'Sangat Tidak Setuju') {
-        return res + 1
-      }  
-    }
-    return res
-  }, 0)
+  const total = arrayAnswer.reduce((res, cur) => res + (cur.value || 0), 0)
   
   const result = total <= 91 
   ? (<span className="text-red">kurang</span>)
