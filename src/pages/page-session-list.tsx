@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { InputText } from "../components/input";
 import { collection, deleteDoc, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { firestore } from "../firebase";
+import { downloadExcelFile } from "../utils/excel-downloader";
 
 const dummyData: any[] = []
 
@@ -13,6 +14,7 @@ for (let i=0;i<100;i++) {
 
 export function PageSessionList() {
   const navigate = useNavigate();
+  const [error, setError] = useState(false);
   const [resultRow, setResultRow] = useState(5);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
@@ -61,8 +63,29 @@ export function PageSessionList() {
     try {
       const res = await getDocs(query(collection(firestore, 'assessment'), where('sessionId', '==', sessionId)));
       const resList: any[] = [];
-      res.forEach((item) => resList.push(item));
-      console.log("🚀 ~ file: page-session-list.tsx:64 ~ downloadSessionData ~ resList:", resList)
+      res.forEach((item) => { 
+        const data = item.data();
+        const answer = JSON.parse(data.answer);
+        const answerObj = {};
+        answer.forEach((item: any) => {
+          Object.assign(answerObj, { [item.id]: item.value })
+        })
+
+        resList.push({
+          nama: data.name,
+          sekolah: data.school,
+          gender: data.gender,
+          tanggal_tes: data.createdAt.toDate().toLocaleDateString(),
+          ...answerObj
+        })
+      });
+
+      if (resList.length === 0) {
+        setError(true);
+        return;
+      }
+
+      await downloadExcelFile('assessment', resList);
     } catch (err) {
       console.error(err);
     }
@@ -121,7 +144,8 @@ export function PageSessionList() {
         </div>
 
         <div>
-          {pagesResult.length === 0 ? <div className="py-6 text-center">Data tidak ditemukan</div> : null}
+          {fetchedData.length === 0 ? <div className="py-6 text-center">Silahkan mulai sesi asesmen anda</div> : null}
+          {fetchedData.length !== 0 && pagesResult.length === 0 ? <div className="py-6 text-center">Data tidak ditemukan</div> : null}
         
           <div className="flex gap-6 justify-end pt-10 pb-4 pr-4 items-center">
             <span>{`Pages : ${page+1} / ${pagesResult.length}`}</span>
@@ -134,6 +158,25 @@ export function PageSessionList() {
           </div>
         </div>
       </div>
+
+      {error ? (
+        <div className="fixed z-50 top-0 left-0 w-full h-full bg-[#0A0A0A] bg-opacity-80 flex justify-center items-center">
+          <div className="bg-white rounded-md w-[85%] lg:w-[626px] overflow-hidden">
+            <div className="px-6 pt-6 pb-4">
+              <h4 className="text-[#0a0a0a] text-4xl font-bold flex items-center">
+                <img src="/assets/warning.svg" className="h-9 mt-1 mr-2 -ml-2"/>
+                Data tidak ditemukan
+              </h4>
+              <p className="text-[#616161] text-2xl mt-2 ml-9">
+                Tidak ada data sampel asesmen ditemukan, silahkan mulai proses pengambilan sampel terlebih dahulu.
+              </p>
+            </div>
+            <div className="flex justify-end bg-[#F5F5F5] py-3 px-6 gap-3">
+              <Button className="w-full"  onClick={() => setError(false)}>Tutup</Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   )
 }
