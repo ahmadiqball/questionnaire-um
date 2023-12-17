@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "../components/button";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export function PageStart() {
   const navigate = useNavigate();
   const [error, setError] = useState(false);
+  const pinRef = useRef<HTMLInputElement>(null);
 
   const pinSubmitHanlder = () => {
+    if (pinRef.current?.value !== import.meta.env.VITE_ADMIN_PIN) {
+      setError(true);
+      return;
+    }
+    sessionStorage.setItem('role', import.meta.env.VITE_ADMIN_ID)
     navigate('/counselor');
   }
 
@@ -14,7 +20,7 @@ export function PageStart() {
     <main className="w-full min-h-screen py-10 bg-[url(/assets/background-mix.svg)] bg-center bg-cover bg-no-repeat flex justify-center items-center">
       <div className="border-2 border-purple rounded-lg bg-[#F6F5FD99] backdrop-blur-lg px-10 w-[80%] lg:w-auto lg:px-[126px] py-[185px]">
         <h1 className="text-black text-center text-4xl md:text-left md:text-[64px] font-bold">Masukkan PIN</h1>
-        <input type="text" className="w-full lg:w-[754px] p-4 outline-none border-2 border-purple rounded-md my-10 text-center placeholder:text-[#757575] placeholder:text-2xl" placeholder="Ex. 123456"/>
+        <input ref={pinRef} type="text" className="w-full lg:w-[754px] p-4 outline-none border-2 border-purple rounded-md my-10 text-center placeholder:text-[#757575] placeholder:text-2xl text-2xl font-bold" placeholder="Ex. 123456"/>
         <Button className="ml-auto w-full" onClick={pinSubmitHanlder}>Submit</Button>
       </div>
       

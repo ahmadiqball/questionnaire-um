@@ -1,11 +1,36 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/button";
+import { InputText } from "../components/input";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from "zod";
+
+interface Inputs {
+  school: string;
+  class: string;
+}
+
+const validationSchema = z.object({
+  school: z.string().trim().min(1),
+  class: z.string().trim().min(1),
+})
+
 
 export function PageAddSession() {
   const navigate = useNavigate();
 
-  const addSessionHandler = () => {
-    navigate('/counselor/session/12345')
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors, dirtyFields } 
+  } = useForm<Inputs>({
+      mode: 'onChange', resolver: zodResolver(validationSchema)
+  });
+
+  const onSubmit: SubmitHandler<Inputs> = (data) => {
+    const randomId = (Date.now() * Math.random()).toString().slice(0,6);
+
+    navigate(`/counselor/session/${randomId}`)
   };
 
   return(
@@ -20,25 +45,12 @@ export function PageAddSession() {
           <h2 className="text-black text-4xl font-bold">Buat Asesmen</h2>
           <p className="text-[#404040] text-base mt-6 mb-10">Lengkapi data berikut untuk membuat asesmen</p>
 
-          <div>
-            <label>Nama Universitas</label>
-            <input 
-              type="text" 
-              className="w-full outline-none border border-[#C2C2C2] rounded-md px-3 py-1.5 placeholder:text-[#757575] placeholder:text-base"
-              placeholder="Ex. Sekolah yang dituju"
-            />
-          </div>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <InputText label="Nama Universitas" placeholder="Ex. Sekolah yang dituju" {...register('school')} error={errors.school} dirtyFields={dirtyFields.school}/>
+            <InputText label="Jurusan" placeholder="Ex. 13" className="mt-2" {...register('class')} error={errors.class} dirtyFields={dirtyFields.class}/>
+            <Button className="mt-10 w-full sm:w-full" type="submit">Start</Button>
+          </form>
 
-          <div className="mt-2">
-            <label>Jurusan</label>
-            <input 
-              type="text" 
-              className="w-full outline-none border border-[#C2C2C2] rounded-md px-3 py-1.5 placeholder:text-[#757575] placeholder:text-base"
-              placeholder="Ex. 13"
-            />
-          </div>
-
-          <Button className="mt-10 w-full sm:w-full" onClick={addSessionHandler}>Start</Button>
         </div>
       </div>
     </main>

@@ -50,7 +50,7 @@ export function PageSession() {
           <h2 className="text-black text-4xl font-bold">Token</h2>
 
           <div className="mt-4 flex gap-4 items-center">
-            <h6 className="text-5xl font-bold text-purple w-[375px]">123456</h6>
+            <h6 className="text-5xl font-bold text-purple w-[375px]">{sessionId}</h6>
             <div className="hover:cursor-pointer relative">
               <img src="/assets/link.svg" className="h-10 hover:cursor-pointer" onClick={copyToClipboard}/>
               { copied ? <p className="text-[10px] text-purple font-bold mt-1 absolute">Copied!</p> : null }
