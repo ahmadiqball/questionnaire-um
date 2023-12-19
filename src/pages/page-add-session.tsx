@@ -4,7 +4,7 @@ import { InputText } from "../components/input";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from "zod";
-import { Timestamp, collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
+import { Timestamp, arrayUnion, collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { firestore } from "../firebase";
 
 interface Inputs {
@@ -32,15 +32,19 @@ export function PageAddSession() {
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     try {
       const randomId = (Date.now() * Math.random()).toString().slice(0,6);
-  
-      await setDoc(doc(firestore, 'session', doc(collection(firestore, 'session')).id), {
+      const docId =  doc(collection(firestore, 'session')).id
+      await setDoc(doc(firestore, 'session', docId), {
         ...data,
           sessionId: randomId,
         createdAt: Timestamp.now(),
         active: true
       })
 
-      navigate(`/counselor/session/${randomId}`);
+      await setDoc(doc(firestore, 'session', 'active-list'), {
+        sessionId: arrayUnion(randomId)
+      })
+
+      navigate(`/counselor/session/${docId}`);
     } catch (err) {
       console.error(err);
     }

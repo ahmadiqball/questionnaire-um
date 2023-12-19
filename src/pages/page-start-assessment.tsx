@@ -4,7 +4,7 @@ import { InputRadio, InputText } from "../components/input";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from '@hookform/resolvers/zod';
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { firestore } from "../firebase";
 import { useState } from "react";
 import { useStore } from "../store";
@@ -40,9 +40,10 @@ export function PageStartAssessment() {
     
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     try {
-      const dbData = await getDocs(query(collection(firestore, 'session'), where('sessionId', '==', data.token)))
-      
-      if (dbData.empty) {
+      const dbData = await getDoc(doc(firestore, 'session', 'active-list'))
+      const active = dbData.data()?.sessionId
+
+      if (!active.includes(data.token)) {
         setError(true);
         return;
       }

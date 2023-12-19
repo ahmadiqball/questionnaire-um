@@ -1,47 +1,70 @@
 import { useNavigate, useParams } from "react-router-dom"
 import { Button } from "../components/button";
 import { useEffect, useState } from "react";
+import { DocumentData, Timestamp, arrayRemove, collection, doc, getDoc, query, setDoc, updateDoc } from "firebase/firestore";
+import { firestore } from "../firebase";
 
 const initDate = new Date(Date.now())
 
 export function PageSession() {
   const navigate = useNavigate();
   const { sessionId } = useParams();
+  const [sessionData, setSessionData] = useState<DocumentData | undefined>();
   const [modal, setModal] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [timer, setTimer] = useState('00:00');
+  const [timer, setTimer] = useState(0);
+  const minute = Math.floor(timer/60).toLocaleString('en-US', { minimumIntegerDigits: 2});
+  const second = Math.round(((timer/60)%1)*60).toLocaleString('en-US', { minimumIntegerDigits: 2})
 
-  const endSessionHandler = () => {
+  const endSessionHandler = async () => {
+    if (sessionId) {
+      await updateDoc(doc(firestore, 'session', sessionId), {
+        active: false
+      })
+
+      await setDoc(doc(firestore, 'session', 'active-list'), {
+        sessionId: arrayRemove(sessionId)
+      })
+    }
+
     navigate('/counselor/session')
   };
 
   const copyToClipboard = () => {
-    const url = `${window.location.origin}/assessment/start?id=${sessionId}`
+    const url = `${window.location.origin}/assessment/start?id=${sessionData?.sessionId}`
     navigator.clipboard.writeText(url);
     setCopied(true);
   };
 
   useEffect(() => {
+    async function getSessionData() {
+      if (sessionId) {
+        const res = await getDoc(doc(firestore, 'session', sessionId));
+        const data = res.data();
+        setSessionData(data);
+      }
+    }
 
+    getSessionData();
+  }, [sessionId]);
+
+  useEffect(() => {
+   if (sessionData) {
+    const initialTimer = Timestamp.now().seconds - sessionData.createdAt.seconds;
+    setTimer(initialTimer);
     const runTimer = () => {
-      const currDate = new Date(Date.now())
-      const minute = (currDate.getMinutes() - initDate.getMinutes()).toLocaleString('en-US', { minimumIntegerDigits: 2});
-      const second = (currDate.getSeconds() - initDate.getSeconds()).toLocaleString('en-US', { minimumIntegerDigits: 2});
-
-      const stringTime = `${minute}:${second}`
-
-      setTimer(stringTime);
+      setTimer((prev) => prev + 1);
     };
 
     const interval = setInterval(runTimer, 1000);
-
     return () => clearInterval(interval);
-  })
+   }
+  }, [sessionData])
 
   return(
     <main className="w-full h-screen bg-[url(/assets/background-dark.svg)]  bg-center bg-cover bg-no-repeat">
       <div className="w-full flex justify-between items-center bg-purple py-5 px-10 md:px-20">
-        <h1 className="text-white text-3xl font-bold">{timer}</h1>
+        <h1 className="text-white text-3xl font-bold">{`${minute}:${second}`}</h1>
         <Button light onClick={() => navigate('/counselor/session')} className="w-36">Load Session</Button>
       </div>
     
@@ -50,7 +73,7 @@ export function PageSession() {
           <h2 className="text-black text-4xl font-bold">Token</h2>
 
           <div className="mt-4 flex gap-4 items-center">
-            <h6 className="text-5xl font-bold text-purple w-[375px]">{sessionId}</h6>
+            <h6 className="text-5xl font-bold text-purple w-[375px]">{sessionData?.sessionId}</h6>
             <div className="hover:cursor-pointer relative">
               <img src="/assets/link.svg" className="h-10 hover:cursor-pointer" onClick={copyToClipboard}/>
               { copied ? <p className="text-[10px] text-purple font-bold mt-1 absolute">Copied!</p> : null }

@@ -16,7 +16,7 @@ interface AnswerState {
 export function PageAssessment() {
   const navigate = useNavigate();
   const { assessmentId } = useParams();
-  const [question, setQuestion] = useState(1);
+  const [question, setQuestion] = useState(46);
   const [answer, setAnswer] = useState(questions);
   const activeQuestion = questions[question as keyof typeof questions];
   const { userData, setStoreAnswers } = useStore();
@@ -113,7 +113,7 @@ export function PageAssessment() {
             Kembali
           </Button>
           <Button
-            disabled={!answer[question as keyof typeof questions].value} 
+            disabled={answer[question as keyof typeof questions].value === 0} 
             onClick={() => changeQuestionHandler('next')} 
             className="w-full"
           >

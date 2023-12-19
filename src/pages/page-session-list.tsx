@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../components/button";
 import { useEffect, useRef, useState } from "react";
 import { InputText } from "../components/input";
-import { collection, deleteDoc, doc, getDoc, getDocs, query, where } from "firebase/firestore";
+import { arrayRemove, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { firestore } from "../firebase";
 import { downloadExcelFile } from "../utils/excel-downloader";
 
@@ -21,7 +21,7 @@ export function PageSessionList() {
   const [fetchedData, setFetchedData] = useState<any[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
   const rowRef = useRef<HTMLInputElement>(null);
-  const filteredData = fetchedData.filter((item) => item.school.includes(search) || item.class.includes(search));
+  const filteredData = fetchedData.filter((item) => item.school.toLowerCase().includes(search.toLowerCase()) || item.class.toLowerCase().includes(search.toLowerCase()));
   const pages = Math.ceil(filteredData.length / resultRow);
   const pagesResult = []
   for (let i=0;i<pages;i++) {
@@ -50,9 +50,12 @@ export function PageSessionList() {
     }
   };
 
-  const deleteSessionHandler = async (docId: string) => {
+  const deleteSessionHandler = async (docId: string, sessionId: string) => {
     try {
       await deleteDoc(doc(firestore, "session", docId));
+      await setDoc(doc(firestore, 'session', 'active-list', ), {
+        sessionId: arrayRemove(sessionId)
+      })
       setFetchedData(fetchedData.filter((item) => item.id !== docId));
     } catch (err) {
       console.error(err);
@@ -96,7 +99,11 @@ export function PageSessionList() {
       try {
         const res = await getDocs(collection(firestore, 'session'));
         const sessions: any[] = [];
-        res.forEach((item) => { sessions.push({ ...item.data(), id: item.id } ) });
+        res.forEach((item) => { 
+          if (item.id !== 'active-list') {
+            sessions.push({ ...item.data(), id: item.id } )
+          }
+        });
         setFetchedData(sessions);
       } catch (err) {
         console.error(err);
@@ -108,35 +115,44 @@ export function PageSessionList() {
 
   return(
     <main>
-      <div className="w-full flex justify-between items-center bg-purple py-5 px-5 lg:px-20">
+      <div className="w-full flex justify-between items-center bg-purple py-5 px-5 lg:px-[100px]">
         <h1 className="text-white text-2xl sm:text-4xl font-bold">Load Session</h1>
         <Button className="bg-red w-[150px]" onClick={logoutHandler} >Logout</Button>
       </div>
 
-      <div className="mx-5 lg:mx-[100px] my-10 lg:my-[85px] bg-[#F6F5FD] rounded-lg">
+      <Button className="ml-auto mr-[100px] mt-10" onClick={() => navigate('/counselor/add-session')}>Add session</Button>
+
+      <div className="mx-5 lg:mx-[100px] my-5 lg:my-10 bg-[#F6F5FD] rounded-lg">
         <div className="p-4 flex flex-col sm:flex-row gap-5">
-          <InputText placeholder='Search' className='w-full sm:w-[238px]' ref={searchRef}/>
-          <InputText placeholder='Result row per page' className='w-full sm:w-[238px]' type='number' ref={rowRef} defaultValue={resultRow} />
-          <Button className="h-[38px] w-full sm:w-[100px]" onClick={searchHandler}>Search</Button>
+          <InputText placeholder='Search' className='w-full sm:w-[238px]' onChange={searchHandler} ref={searchRef}/>
+          <InputText placeholder='Result row per page' className='w-full sm:w-[238px]' type='number' onChange={searchHandler} ref={rowRef} defaultValue={resultRow} />
         </div>
 
         <div className="w-full overflow-x-scroll">
-          <div className="min-w-[560px] grid grid-cols-4 text-lg font-bold text-white bg-purple-light items-center">
+          <div className="min-w-[560px] grid grid-cols-5 text-lg font-bold text-white bg-purple-light items-center">
             <span className="py-[14px] px-4 min-w-[140px]">Universitas</span>
             <span className="py-[14px] px-4 min-w-[140px]">Jurusan</span>
             <span className="py-[14px] px-4 min-w-[140px]">Tanggal Sesi</span>
+            <span className="py-[14px] px-4 min-w-[140px]">Status</span>
             <span className="py-[14px] px-4 min-w-[140px]"></span>
           </div>
 
           <div className="divide-y divide-[#E0E0E0] text-[#404040]">
             {pagesResult[page]?.map((data, index) => (
-              <div className="min-w-[560px] grid grid-cols-4 items-center" key={index}>
+              <div 
+                className={`min-w-[560px] grid grid-cols-5 items-center
+                ${data.active ? 'cursor-pointer' : ''}`} 
+                key={index}  
+                onClick={(e: any) => {                  
+                  if (data.active && !e.target.id) navigate(`/counselor/session/${data.id}`)
+                }}>
                 <span className="py-[14px] px-4 min-w-[140px]">{data.school}</span>
                 <span className="py-[14px] px-4 min-w-[140px]">{data.class}</span>
                 <span className="py-[14px] px-4 min-w-[140px]">{data.createdAt.toDate().toLocaleDateString()}</span>
+                <span className="py-[14px] px-4 min-w-[140px]">{data.active ? 'Aktif' : 'Selesai'}</span>
                 <span className="flex justify-end gap-10 py-[14px] px-4 min-w-[140px]">
-                  <img src="/assets/download.svg" className="cursor-pointer" onClick={() => downloadSessionData(data.sessionId)}/>
-                  <img src="/assets/delete.svg" className="cursor-pointer" onClick={() => deleteSessionHandler(data.id)}/>
+                  <img src="/assets/download.svg" className="cursor-pointer" id="downloader" onClick={() => downloadSessionData(data.sessionId)}/>
+                  <img src="/assets/delete.svg" className="cursor-pointer" id="delete" onClick={() => deleteSessionHandler(data.id, data.sessionId)}/>
                 </span>
               </div>
             ))}
@@ -165,10 +181,10 @@ export function PageSessionList() {
             <div className="px-6 pt-6 pb-4">
               <h4 className="text-[#0a0a0a] text-4xl font-bold flex items-center">
                 <img src="/assets/warning.svg" className="h-9 mt-1 mr-2 -ml-2"/>
-                Data tidak ditemukan
+                Belum ada data sampel diterima
               </h4>
               <p className="text-[#616161] text-2xl mt-2 ml-9">
-                Tidak ada data sampel asesmen ditemukan, silahkan mulai proses pengambilan sampel terlebih dahulu.
+                Sesi ini belum menerima input asesmen, silahkan mulai proses pengambilan sampel terlebih dahulu.
               </p>
             </div>
             <div className="flex justify-end bg-[#F5F5F5] py-3 px-6 gap-3">
