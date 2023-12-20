@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../components/button";
 import { InputRadio, InputText } from "../components/input";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -26,6 +26,8 @@ const validationSchema = z.object({
 })
 
 export function PageStartAssessment() {
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('id');
   const [error, setError] = useState(false);
   const { setUserData } = useStore();
   const navigate = useNavigate();
@@ -34,9 +36,8 @@ export function PageStartAssessment() {
     handleSubmit, 
     formState: { errors, dirtyFields }
   } = useForm<Inputs>({
-      mode: 'onChange', resolver: zodResolver(validationSchema)
+    mode: 'onChange', resolver: zodResolver(validationSchema)
   });
-
     
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     try {
@@ -76,7 +77,7 @@ export function PageStartAssessment() {
 
             <InputRadio options={['Laki-laki', 'Perempuan']} label="Jenis kelamin" className="mt-[14px]" {...register('gender')} error={errors.gender}/>
             <InputText label="Asal Universitas" placeholder="Ex. Universitas Asal Kamu"  className="mt-[14px]" {...register('school')} error={errors.school} dirtyFields={dirtyFields.school}/>
-            <InputText label="Token" placeholder="Ex. 123456" className="mt-[14px]" {...register('token')} error={errors.token} dirtyFields={dirtyFields.token}/>
+            <InputText label="Token" placeholder="Ex. 123456" className="mt-[14px]" {...register('token')} error={errors.token} dirtyFields={dirtyFields.token || sessionId} defaultValue={sessionId}/>
             
             <Button className="mt-10 w-full sm:w-full" type='submit'>Lanjut</Button>
           </form>

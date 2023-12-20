@@ -6,7 +6,7 @@ export function PageLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const isCounselorPage = location.pathname.includes('counselor') && location.pathname !== '/counselor/start';
-  const isAssessmentPage = location.pathname.includes('assessment'); 
+  const isAssessmentPage = location.pathname.includes('assessment') && location.pathname !== '/assessment/start'; 
   const isCounselor = sessionStorage.getItem('role') === import.meta.env.VITE_ADMIN_ID;
   const { userData } = useStore();
 
