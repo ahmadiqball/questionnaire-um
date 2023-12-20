@@ -16,6 +16,7 @@ export function PageLayout() {
     } else if (isAssessmentPage && !userData) {
       navigate('/assessment/start');
     }
+
   }, [])
 
   if (isCounselorPage && !isCounselor) {

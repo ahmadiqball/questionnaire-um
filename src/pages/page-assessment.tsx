@@ -16,7 +16,7 @@ interface AnswerState {
 export function PageAssessment() {
   const navigate = useNavigate();
   const { assessmentId } = useParams();
-  const [question, setQuestion] = useState(46);
+  const [question, setQuestion] = useState(1);
   const [answer, setAnswer] = useState(questions);
   const activeQuestion = questions[question as keyof typeof questions];
   const { userData, setStoreAnswers } = useStore();
@@ -71,6 +71,8 @@ export function PageAssessment() {
         value
       }
     })
+
+    changeQuestionHandler('next')
   };
 
   return (
