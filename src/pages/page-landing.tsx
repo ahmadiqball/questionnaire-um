@@ -15,7 +15,7 @@ export function PageLanding() {
           </h1>
 
           <div className="my-8">
-            <p>Disusun oleh:</p>
+            <p>Disusun oleh :</p>
             <p>Auliya Sekar Rini (220111610220)</p>
             <p>Nazalia Febrina Fasya Abidin (220111601463)</p>
             <p>Rafa Almareta Putri Arya (220111608402)</p>
@@ -23,8 +23,13 @@ export function PageLanding() {
           </div>
 
           <div className="mb-8">
-            <p>Dibimbing oleh:</p>
+            <p>Dibimbing oleh :</p>
             <p>Prof. Dr. Hj. Nur Hidayah, M.Pd. (NIP. 195908171983032001)</p>
+          </div>
+
+          <div className="mb-8">
+            <p>Mentor :</p>
+            <p>Aisyiah Aiwani, S.Pd.</p>
           </div>
 
           <Button onClick={() => navigate('/guide')}>Start</Button>
