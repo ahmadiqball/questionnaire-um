@@ -16,51 +16,51 @@ interface AnswerState {
 export function PageAssessment() {
   const navigate = useNavigate();
   const { assessmentId } = useParams();
-  const [question, setQuestion] = useState(1);
+  const [question, setQuestion] = useState(46);
   const [answer, setAnswer] = useState(questions);
   const activeQuestion = questions[question as keyof typeof questions];
   const { userData, setStoreAnswers } = useStore();
 
   const sendToDatabase = async () => {
     try {
-      const arrayValue = Object.values(answer);
-      const savedAnswer = arrayValue.map((item: any) => {
-        return {
-          id: item.id,
-          value: item.value
-        }
-      })
-
-      await setDoc(doc(firestore, 'assessment', doc(collection(firestore, 'assessment')).id), {
-        name: userData!.name,
-        age: userData!.age,
-        school: userData!.school,
-        gender: userData!.gender,
-        answer: JSON.stringify(savedAnswer),
-        sessionId: assessmentId,
-        createdAt: Timestamp.now(),
-      })
+ 
     } catch (err) {
       console.error(err);
     }
   };
 
   const changeQuestionHandler = async (type: string) => {
-    if (type === 'next' && question === 46) {
-      try {
-        await sendToDatabase();
-        setStoreAnswers(answer);
-        navigate(`/assessment/${assessmentId}/result`);
-      } catch (err) {
-        console.error(err);
+    try {
+      if (type === 'next' && question === 46) {
+          const arrayValue = Object.values(answer);
+          const savedAnswer = arrayValue.map((item: any) => {
+            return {
+              id: item.id,
+              value: item.value
+            }
+          })
+    
+          await setDoc(doc(firestore, 'assessment', doc(collection(firestore, 'assessment')).id), {
+            name: userData!.name,
+            age: userData!.age,
+            school: userData!.school,
+            gender: userData!.gender,
+            answer: JSON.stringify(savedAnswer),
+            sessionId: assessmentId,
+            createdAt: Timestamp.now(),
+          })
+          setStoreAnswers(answer);
+          navigate(`/assessment/${assessmentId}/result`);
       }
-    }
 
-    if (type === 'next') {
-      setQuestion(question+1)
-    } else {
-      setQuestion(question-1)
-    }
+      if (type === 'next') {
+        setQuestion(question+1)
+      } else {
+        setQuestion(question-1)
+      }
+    } catch (err) {
+      console.error(err);
+  }
   };
 
   const updateQuestionValue = (value: number) => {
