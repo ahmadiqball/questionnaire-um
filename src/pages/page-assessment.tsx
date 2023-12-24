@@ -21,14 +21,6 @@ export function PageAssessment() {
   const activeQuestion = questions[question as keyof typeof questions];
   const { userData, setStoreAnswers } = useStore();
 
-  const sendToDatabase = async () => {
-    try {
- 
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const changeQuestionHandler = async (type: string) => {
     try {
       if (type === 'next' && question === 46) {
