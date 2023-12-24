@@ -1,8 +1,15 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { Button } from "../components/button";
 
 export function PageLanding() {
   const navigate = useNavigate();
+  const { playMusic } = useOutletContext<any>();
+
+  const startHandler = () => {
+    console.log('bbb')
+    playMusic();
+    navigate('/guide');
+  }
 
   return(
     <main className="w-full min-h-screen bg-[url(/assets/background-mix.svg)] bg-center bg-cover bg-no-repeat">
@@ -32,7 +39,7 @@ export function PageLanding() {
             <p>Aisyiah Aiwani, S.Pd.</p>
           </div>
 
-          <Button onClick={() => navigate('/guide')}>Start</Button>
+          <Button onClick={startHandler}>Start</Button>
       </div>
     </main>
   ) 

@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { Button } from "../components/button";
 import { InputRadio, InputText } from "../components/input";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -27,6 +27,7 @@ const validationSchema = z.object({
 
 export function PageStartAssessment() {
   const [searchParams] = useSearchParams();
+  const { playMusic } = useOutletContext<any>();
   const sessionId = searchParams.get('id');
   const [error, setError] = useState(false);
   const { setUserData } = useStore();
@@ -56,6 +57,7 @@ export function PageStartAssessment() {
         school: data.school
       })
 
+      playMusic();
       navigate(`/assessment/${data.token}`)
     } catch (err) {
       console.error(err);
