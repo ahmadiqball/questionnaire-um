@@ -30,9 +30,9 @@ export function PageLayout() {
   }
 
   return (
-    <>
+    <div className="font-jakarta-sans">
       <audio loop id="bg-music" ref={ref} controls src="/assets/keshi-blue.mp3" className="h-0 w-0 hidden"/>
       <Outlet context={{playMusic}}/>
-    </>
+    </div>
   )
 }
